@@ -2,6 +2,11 @@
 
 All notable changes to Icon Creator are documented here.
 
+## v1.3.5 - 2026-06-29
+
+- Fixed the packaged macOS app icon rendering with an unwanted grey outer layer.
+- Regenerated the app icon source assets so Finder and Launch Services display the intended artwork.
+
 ## v1.3.4 - 2026-06-21
 
 - Changed the packaged app icon to the provided `app.icns` artwork.

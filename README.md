@@ -79,7 +79,7 @@ Build the macOS app and DMG:
 The packaged DMG is written to:
 
 ```text
-dist/Icon-Creator-1.3.4-macOS-arm64.dmg
+dist/Icon-Creator-1.3.5-macOS-arm64.dmg
 ```
 
 ## CLI Usage

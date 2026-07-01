@@ -10,7 +10,6 @@ import (
 	"image/png"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -126,11 +125,8 @@ func Create(cfg Config) (Output, error) {
 		return Output{}, fmt.Errorf("remove old png: %w", err)
 	}
 
-	cmd := exec.Command("/usr/bin/iconutil", "-c", "icns", "-o", outputPaths.ICNSPath, iconsetDir)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return Output{}, fmt.Errorf("run iconutil: %w%s", err, formatToolError(stderr.String()))
+	if err := writeICNS(outputPaths.ICNSPath, iconsetDir); err != nil {
+		return Output{}, err
 	}
 	if err := writeICO(outputPaths.ICOPath, icon1024); err != nil {
 		return Output{}, err
@@ -591,6 +587,55 @@ func writePNG(path string, img image.Image) error {
 	return nil
 }
 
+func writeICNS(path string, iconsetDir string) error {
+	// ostype → canonical filename in the iconset
+	type entry struct {
+		ostype   string
+		filename string
+	}
+	entries := []entry{
+		{"icp4", "icon_16x16.png"},
+		{"icp5", "icon_32x32.png"},
+		{"icp6", "icon_32x32@2x.png"},
+		{"ic07", "icon_128x128.png"},
+		{"ic08", "icon_256x256.png"},
+		{"ic09", "icon_512x512.png"},
+		{"ic10", "icon_512x512@2x.png"},
+	}
+
+	var body bytes.Buffer
+	for _, e := range entries {
+		data, err := os.ReadFile(filepath.Join(iconsetDir, e.filename))
+		if err != nil {
+			return fmt.Errorf("read iconset file %s: %w", e.filename, err)
+		}
+		chunkLen := uint32(8 + len(data))
+		body.WriteString(e.ostype)
+		if err := binary.Write(&body, binary.BigEndian, chunkLen); err != nil {
+			return fmt.Errorf("write icns chunk header: %w", err)
+		}
+		body.Write(data)
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("create icns %s: %w", path, err)
+	}
+	defer f.Close()
+
+	totalLen := uint32(8 + body.Len())
+	if _, err := f.WriteString("icns"); err != nil {
+		return fmt.Errorf("write icns magic: %w", err)
+	}
+	if err := binary.Write(f, binary.BigEndian, totalLen); err != nil {
+		return fmt.Errorf("write icns length: %w", err)
+	}
+	if _, err := f.Write(body.Bytes()); err != nil {
+		return fmt.Errorf("write icns body: %w", err)
+	}
+	return nil
+}
+
 func writeICO(path string, src *image.NRGBA) error {
 	type icoImage struct {
 		size int
@@ -700,12 +745,4 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
-}
-
-func formatToolError(stderr string) string {
-	stderr = strings.TrimSpace(stderr)
-	if stderr == "" {
-		return ""
-	}
-	return ": " + stderr
 }

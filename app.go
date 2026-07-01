@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 
 	"iconcreator/internal/iconcreator"
@@ -199,7 +200,12 @@ func (a *App) Reveal(path string) error {
 	if strings.TrimSpace(path) == "" {
 		return fmt.Errorf("missing path")
 	}
-	return exec.Command("/usr/bin/open", "-R", path).Run()
+	switch goruntime.GOOS {
+	case "windows":
+		return exec.Command("explorer", "/select,"+filepath.FromSlash(path)).Run()
+	default:
+		return exec.Command("/usr/bin/open", "-R", path).Run()
+	}
 }
 
 func previewDataURL(path string, format string) (string, error) {

@@ -13,9 +13,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	_ "image/gif"
-	_ "image/jpeg"
 )
 
 const (
@@ -76,7 +73,7 @@ func Create(cfg Config) (Output, error) {
 	panX := normalizePan(cfg.PanX)
 	panY := normalizePan(cfg.PanY)
 
-	source, err := loadImage(cfg.InputPath)
+	source, _, err := DecodeSource(cfg.InputPath)
 	if err != nil {
 		return Output{}, err
 	}
@@ -271,20 +268,6 @@ func workingDirectory(outputPath string, keep bool) (string, func(), error) {
 	return workDir, func() {
 		_ = os.RemoveAll(workDir)
 	}, nil
-}
-
-func loadImage(path string) (image.Image, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("open source image: %w", err)
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, fmt.Errorf("decode source image: %w", err)
-	}
-	return img, nil
 }
 
 func centerSquare(src image.Image, zoom float64, panX float64, panY float64) image.Image {

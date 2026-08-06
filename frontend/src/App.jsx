@@ -262,7 +262,7 @@ function App() {
                 <ImagePlus size={44} aria-hidden="true" />
                 <div>
                   <h2>Drop image</h2>
-                  <p>PNG, JPG, GIF</p>
+                  <p>PNG, JPG, GIF, WebP, SVG</p>
                 </div>
               </div>
             )}

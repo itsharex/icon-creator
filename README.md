@@ -20,7 +20,7 @@ Developed by Florian Bidabe / Photon Security ([www.photonsec.com.au](https://ww
 
 1. Download the latest DMG from the [Releases page](https://github.com/Photon-Security/icon-creator/releases/latest).
 2. Open the DMG and drag **Icon Creator.app** into your `/Applications` folder.
-3. Launch the app and drop in a PNG, JPG, JPEG, or GIF source image.
+3. Launch the app and drop in a PNG, JPG, JPEG, GIF, WebP, or SVG source image.
 
 ### First launch: allow the app
 
@@ -54,6 +54,7 @@ removed automatically unless **Keep working files** is enabled.
 
 - Native macOS desktop app built with Go, Wails, and React
 - Drag-and-drop source image selection
+- PNG, JPEG, GIF, WebP, and SVG input support
 - Live rounded-corner overlay preview
 - Zoom crop and drag-to-recenter controls
 - Automatic `.icns`, `.ico`, and PNG export
@@ -79,7 +80,7 @@ Build the macOS app and DMG:
 The packaged DMG is written to:
 
 ```text
-dist/Icon-Creator-1.3.5-macOS-arm64.dmg
+dist/Icon-Creator-1.3.6-macOS-arm64.dmg
 ```
 
 ## CLI Usage

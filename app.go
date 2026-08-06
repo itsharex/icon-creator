@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"image"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,7 +71,7 @@ func (a *App) SelectImage() (ImageInfo, error) {
 	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select source image",
 		Filters: []runtime.FileFilter{
-			{DisplayName: "Image Files (*.png, *.jpg, *.jpeg, *.gif)", Pattern: "*.png;*.jpg;*.jpeg;*.gif"},
+			{DisplayName: "Image Files (*.png, *.jpg, *.jpeg, *.gif, *.webp, *.svg)", Pattern: "*.png;*.jpg;*.jpeg;*.gif;*.webp;*.svg"},
 			{DisplayName: "PNG Files (*.png)", Pattern: "*.png"},
 			{DisplayName: "All Files (*.*)", Pattern: "*.*"},
 		},
@@ -108,14 +107,9 @@ func (a *App) InspectImage(path string) (ImageInfo, error) {
 		return ImageInfo{}, fmt.Errorf("missing image path")
 	}
 
-	file, err := os.Open(path)
+	config, format, err := iconcreator.DecodeSourceConfig(path)
 	if err != nil {
-		return ImageInfo{}, fmt.Errorf("open image: %w", err)
-	}
-	config, format, err := image.DecodeConfig(file)
-	_ = file.Close()
-	if err != nil {
-		return ImageInfo{}, fmt.Errorf("read image dimensions: %w", err)
+		return ImageInfo{}, fmt.Errorf("read image: %w", err)
 	}
 
 	info, err := os.Stat(path)
@@ -215,8 +209,11 @@ func previewDataURL(path string, format string) (string, error) {
 	}
 
 	mime := "image/" + format
-	if format == "jpg" {
+	if format == "jpg" || format == "jpeg" {
 		mime = "image/jpeg"
+	}
+	if format == "svg" {
+		mime = "image/svg+xml"
 	}
 	if format == "" {
 		mime = "application/octet-stream"

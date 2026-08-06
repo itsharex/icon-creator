@@ -2,6 +2,10 @@
 
 All notable changes to Icon Creator are documented here.
 
+## v1.3.6 - 2026-08-06
+
+- Added WebP and SVG source image support to the desktop app and CLI.
+
 ## v1.3.5 - 2026-06-29
 
 - Fixed the packaged macOS app icon rendering with an unwanted grey outer layer.

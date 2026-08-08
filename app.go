@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
+	"image/png"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,7 +74,7 @@ func (a *App) SelectImage() (ImageInfo, error) {
 	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select source image",
 		Filters: []runtime.FileFilter{
-			{DisplayName: "Image Files (*.png, *.jpg, *.jpeg, *.gif, *.webp, *.svg)", Pattern: "*.png;*.jpg;*.jpeg;*.gif;*.webp;*.svg"},
+			{DisplayName: "Image Files (*.png, *.jpg, *.jpeg, *.gif, *.webp, *.svg, *.ico, *.icns)", Pattern: "*.png;*.jpg;*.jpeg;*.gif;*.webp;*.svg;*.ico;*.icns"},
 			{DisplayName: "PNG Files (*.png)", Pattern: "*.png"},
 			{DisplayName: "All Files (*.*)", Pattern: "*.*"},
 		},
@@ -127,7 +129,7 @@ func (a *App) InspectImage(path string) (ImageInfo, error) {
 		Path:              path,
 		Name:              filepath.Base(path),
 		Directory:         filepath.Dir(path),
-		DefaultOutputPath: filepath.Join(filepath.Dir(path), "app.icns"),
+		DefaultOutputPath: defaultOutputPath(path),
 		Width:             config.Width,
 		Height:            config.Height,
 		SizeBytes:         info.Size(),
@@ -137,7 +139,7 @@ func (a *App) InspectImage(path string) (ImageInfo, error) {
 
 func (a *App) CreateIcon(req CreateIconRequest) (CreateIconResponse, error) {
 	if strings.TrimSpace(req.OutputPath) == "" && strings.TrimSpace(req.InputPath) != "" {
-		req.OutputPath = filepath.Join(filepath.Dir(req.InputPath), "app.icns")
+		req.OutputPath = defaultOutputPath(req.InputPath)
 	}
 
 	replaced := false
@@ -209,6 +211,18 @@ func (a *App) Reveal(path string) error {
 }
 
 func previewDataURL(path string, format string) (string, error) {
+	if format == "ico" || format == "icns" {
+		img, _, err := iconcreator.DecodeSource(path)
+		if err != nil {
+			return "", fmt.Errorf("decode preview image: %w", err)
+		}
+		var encoded bytes.Buffer
+		if err := png.Encode(&encoded, img); err != nil {
+			return "", fmt.Errorf("encode preview image: %w", err)
+		}
+		return "data:image/png;base64," + base64.StdEncoding.EncodeToString(encoded.Bytes()), nil
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", fmt.Errorf("read preview image: %w", err)
@@ -226,6 +240,16 @@ func previewDataURL(path string, format string) (string, error) {
 	}
 
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data), nil
+}
+
+func defaultOutputPath(inputPath string) string {
+	directory := filepath.Dir(inputPath)
+	ext := strings.ToLower(filepath.Ext(inputPath))
+	if ext == ".ico" || ext == ".icns" {
+		name := strings.TrimSuffix(filepath.Base(inputPath), filepath.Ext(inputPath))
+		return filepath.Join(directory, name+"-edited.icns")
+	}
+	return filepath.Join(directory, "app.icns")
 }
 
 func siblingOutputPaths(path string) []string {

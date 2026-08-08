@@ -20,7 +20,7 @@ Developed by Florian Bidabe / Photon Security ([www.photonsec.com.au](https://ww
 
 1. Download the macOS DMG or Windows executable from the [Releases page](https://github.com/Photon-Security/icon-creator/releases/latest).
 2. On macOS, open the DMG and drag **Icon Creator.app** into `/Applications`. On Windows, run the downloaded executable.
-3. Launch the app and drop in a PNG, JPG, JPEG, GIF, WebP, or SVG source image.
+3. Launch the app and drop in a PNG, JPG, JPEG, GIF, WebP, SVG, ICO, or ICNS source image.
 
 ### First launch: allow the app
 
@@ -50,11 +50,16 @@ The normal app flow leaves only the finished `.icns`, `.ico`, and `.png` files.
 Temporary `icon.png` and `.iconset` files are generated in a temp directory and
 removed automatically unless **Keep working files** is enabled.
 
+When reopening an existing `.ico` or `.icns`, Icon Creator selects its largest
+supported frame and defaults the export name to `<name>-edited`, protecting the
+original file. PNG- and BMP-backed ICO frames and modern ICNS image entries are
+supported; legacy JPEG2000-only ICNS files are reported as unsupported.
+
 ## Features
 
 - Native macOS and Windows desktop apps built with Go, Wails, and React
 - Drag-and-drop source image selection
-- PNG, JPEG, GIF, WebP, and SVG input support
+- PNG, JPEG, GIF, WebP, SVG, ICO, and ICNS input support
 - Live rounded-corner overlay preview
 - Zoom crop and drag-to-recenter controls
 - Automatic `.icns`, `.ico`, and PNG export
@@ -84,8 +89,8 @@ Build the app for the current platform:
 The packaged DMG is written to:
 
 ```text
-dist/Icon-Creator-1.3.7-macOS-arm64.dmg
-dist/Icon-Creator-1.3.7-Windows-amd64.exe
+dist/Icon-Creator-1.3.8-macOS-arm64.dmg
+dist/Icon-Creator-1.3.8-Windows-amd64.exe
 ```
 
 ## CLI Usage

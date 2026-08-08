@@ -2,6 +2,13 @@
 
 All notable changes to Icon Creator are documented here.
 
+## v1.3.8 - 2026-08-08
+
+- Added an in-app **About** dialog with the author, version, Photon Security website, and donation link.
+- Added ICO and ICNS source imports so existing icons can be edited and re-exported.
+- Automatically selects the largest supported icon frame and preserves imported transparency.
+- Uses a protected `<name>-edited` output name by default when opening an ICO or ICNS file.
+
 ## v1.3.7 - 2026-08-08
 
 - Added a compiled Windows application to releases alongside the macOS app.

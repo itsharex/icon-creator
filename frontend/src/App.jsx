@@ -5,12 +5,14 @@ import {
   FolderOpen,
   Heart,
   ImagePlus,
+  Info,
   Loader2,
   Move,
   RotateCcw,
   Save,
   SlidersHorizontal,
   Sparkles,
+  X,
   ZoomIn,
 } from "lucide-react";
 import {
@@ -25,6 +27,8 @@ import { BrowserOpenURL, OnFileDrop, OnFileDropOff } from "../wailsjs/runtime/ru
 const defaultRadius = 220;
 const defaultZoom = 1;
 const donationURL = "https://ko-fi.com/enelass";
+const websiteURL = "https://www.photonsec.com.au";
+const appVersion = "1.3.8";
 
 function App() {
   const [image, setImage] = useState(null);
@@ -38,7 +42,10 @@ function App() {
   const [message, setMessage] = useState("");
   const [result, setResult] = useState(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const dragRef = useRef(null);
+  const aboutButtonRef = useRef(null);
+  const aboutCloseRef = useRef(null);
 
   useEffect(() => {
     if (!window.runtime?.OnFileDrop) {
@@ -53,6 +60,22 @@ function App() {
 
     return () => OnFileDropOff();
   }, []);
+
+  useEffect(() => {
+    if (!aboutOpen) return undefined;
+
+    aboutCloseRef.current?.focus();
+    function closeOnEscape(event) {
+      if (event.key === "Escape") {
+        setAboutOpen(false);
+      }
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      aboutButtonRef.current?.focus();
+    };
+  }, [aboutOpen]);
 
   const canCreate = Boolean(image?.path && outputPath && status !== "running");
   const sizeLabel = useMemo(() => formatBytes(image?.sizeBytes || 0), [image]);
@@ -218,6 +241,16 @@ function App() {
             <Heart size={17} aria-hidden="true" />
             <span>Donate to support this work</span>
           </button>
+          <button
+            ref={aboutButtonRef}
+            aria-haspopup="dialog"
+            className="icon-button"
+            title="About Icon Creator"
+            type="button"
+            onClick={() => setAboutOpen(true)}
+          >
+            <Info size={18} aria-hidden="true" />
+          </button>
           <button className="icon-button" title="Reset" type="button" onClick={reset}>
             <RotateCcw size={18} aria-hidden="true" />
           </button>
@@ -262,7 +295,7 @@ function App() {
                 <ImagePlus size={44} aria-hidden="true" />
                 <div>
                   <h2>Drop image</h2>
-                  <p>PNG, JPG, GIF, WebP, SVG</p>
+                  <p>PNG, JPG, GIF, WebP, SVG, ICO, ICNS</p>
                 </div>
               </div>
             )}
@@ -409,6 +442,44 @@ function App() {
           )}
         </aside>
       </section>
+
+      {aboutOpen && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setAboutOpen(false);
+          }}
+        >
+          <section aria-labelledby="about-title" aria-modal="true" className="about-dialog" role="dialog">
+            <button
+              ref={aboutCloseRef}
+              aria-label="Close About"
+              className="icon-button about-close"
+              type="button"
+              onClick={() => setAboutOpen(false)}
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+            <div className="brand-mark about-mark">
+              <Sparkles size={24} aria-hidden="true" />
+            </div>
+            <div className="about-copy">
+              <h2 id="about-title">Icon Creator</h2>
+              <p className="about-version">Version {appVersion}</p>
+              <p>Created by Florian Bidabe<br />Photon Security</p>
+            </div>
+            <div className="about-actions">
+              <button className="secondary-button" type="button" onClick={() => BrowserOpenURL(websiteURL)}>
+                photonsec.com.au
+              </button>
+              <button className="donate-button" type="button" onClick={donate}>
+                <Heart size={17} aria-hidden="true" />
+                Donate
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

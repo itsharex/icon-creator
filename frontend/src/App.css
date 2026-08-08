@@ -549,6 +549,80 @@ button {
   gap: 3px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  padding: 24px;
+  place-items: center;
+  background: rgba(5, 6, 7, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.about-dialog {
+  position: relative;
+  display: grid;
+  width: min(420px, 100%);
+  gap: 20px;
+  padding: 30px;
+  color: #f4f0e8;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(135deg, rgba(124, 242, 181, 0.1), transparent 45%),
+    #1a1b1d;
+  border-radius: 10px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.52);
+}
+
+.about-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.about-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+}
+
+.about-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.about-copy h2,
+.about-copy p {
+  margin: 0;
+}
+
+.about-copy h2 {
+  font-size: 24px;
+}
+
+.about-copy p {
+  color: #c9c2b8;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.about-copy .about-version {
+  color: #7cf2b5;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.about-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.about-actions .secondary-button,
+.about-actions .donate-button {
+  flex: 1 1 0;
+}
+
 .spin {
   animation: spin 900ms linear infinite;
 }

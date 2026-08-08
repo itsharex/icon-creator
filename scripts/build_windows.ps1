@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 
 $RootDir  = Split-Path -Parent $PSScriptRoot
 $AppName  = 'Icon Creator'
-$Version  = '1.3.8'
+$Version  = '1.3.9'
 $BuildDir = Join-Path $RootDir 'build'
 $DistDir  = Join-Path $RootDir 'dist'
 

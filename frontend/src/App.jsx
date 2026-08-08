@@ -28,7 +28,7 @@ const defaultRadius = 220;
 const defaultZoom = 1;
 const donationURL = "https://ko-fi.com/enelass";
 const websiteURL = "https://www.photonsec.com.au";
-const appVersion = "1.3.8";
+const appVersion = "1.3.9";
 
 function App() {
   const [image, setImage] = useState(null);
@@ -82,16 +82,41 @@ function App() {
   const previewRadius = useMemo(() => `${(radius / 1024) * 100}%`, [radius]);
   const roundness = useMemo(() => Math.round((radius / 512) * 100), [radius]);
   const zoomPercent = useMemo(() => Math.round(zoom * 100), [zoom]);
+  const minimumZoom = useMemo(() => {
+    if (!image?.width || !image?.height) return defaultZoom;
+    return Math.min(image.width, image.height) / Math.max(image.width, image.height);
+  }, [image]);
+  const minimumZoomPercent = useMemo(() => Math.ceil(minimumZoom * 1000) / 10, [minimumZoom]);
+  const previewGeometry = useMemo(() => {
+    if (!image?.width || !image?.height) {
+      return { width: 100, height: 100, left: 0, top: 0, overflowX: 0, overflowY: 0 };
+    }
+    const effectiveZoom = clamp(zoom, minimumZoom, 3);
+    const shortSide = Math.min(image.width, image.height);
+    const width = (image.width / shortSide) * effectiveZoom * 100;
+    const height = (image.height / shortSide) * effectiveZoom * 100;
+    const overflowX = Math.max(width - 100, 0);
+    const overflowY = Math.max(height - 100, 0);
+    return {
+      width,
+      height,
+      left: (100 - width) / 2 + (pan.x / 100) * (overflowX / 2),
+      top: (100 - height) / 2 + (pan.y / 100) * (overflowY / 2),
+      overflowX,
+      overflowY,
+    };
+  }, [image, minimumZoom, pan.x, pan.y, zoom]);
   const previewStyle = useMemo(
     () => ({
       "--preview-radius": previewRadius,
-      "--preview-bg-size": `${zoomPercent}%`,
-      "--preview-position-x": `${50 - pan.x / 2}%`,
-      "--preview-position-y": `${50 - pan.y / 2}%`,
+      "--preview-image-width": `${previewGeometry.width}%`,
+      "--preview-image-height": `${previewGeometry.height}%`,
+      "--preview-image-left": `${previewGeometry.left}%`,
+      "--preview-image-top": `${previewGeometry.top}%`,
     }),
-    [pan.x, pan.y, previewRadius, zoomPercent],
+    [previewGeometry, previewRadius],
   );
-  const canPan = Boolean(image && zoom > 1);
+  const canPan = Boolean(image && (previewGeometry.overflowX > 0.01 || previewGeometry.overflowY > 0.01));
 
   async function loadImage(path) {
     setStatus("loading");
@@ -101,6 +126,7 @@ function App() {
       const info = await InspectImage(path);
       setImage(info);
       setOutputPath(info.defaultOutputPath);
+      setZoom(defaultZoom);
       setPan({ x: 0, y: 0 });
       setStatus("idle");
     } catch (error) {
@@ -118,6 +144,7 @@ function App() {
       if (info?.path) {
         setImage(info);
         setOutputPath(info.defaultOutputPath);
+        setZoom(defaultZoom);
         setPan({ x: 0, y: 0 });
       }
       setStatus("idle");
@@ -200,7 +227,8 @@ function App() {
       panY: pan.y,
       width: event.currentTarget.clientWidth,
       height: event.currentTarget.clientHeight,
-      zoom,
+      overflowX: previewGeometry.overflowX,
+      overflowY: previewGeometry.overflowY,
     };
     setIsPanning(true);
   }
@@ -209,11 +237,11 @@ function App() {
     const drag = dragRef.current;
     if (!drag) return;
 
-    const maxX = Math.max((drag.width * (drag.zoom - 1)) / 2, 1);
-    const maxY = Math.max((drag.height * (drag.zoom - 1)) / 2, 1);
+    const maxX = (drag.width * drag.overflowX) / 200;
+    const maxY = (drag.height * drag.overflowY) / 200;
     setPan({
-      x: clamp(drag.panX + ((event.clientX - drag.startX) / maxX) * 100, -100, 100),
-      y: clamp(drag.panY + ((event.clientY - drag.startY) / maxY) * 100, -100, 100),
+      x: maxX > 0 ? clamp(drag.panX + ((event.clientX - drag.startX) / maxX) * 100, -100, 100) : 0,
+      y: maxY > 0 ? clamp(drag.panY + ((event.clientY - drag.startY) / maxY) * 100, -100, 100) : 0,
     });
   }
 
@@ -267,12 +295,13 @@ function App() {
                     aria-label={image.name}
                     className={`icon-preview ${canPan ? "can-pan" : ""} ${isPanning ? "is-panning" : ""}`}
                     role="img"
-                    style={{ "--preview-image": `url(${image.previewDataURL})` }}
                     onPointerCancel={endPan}
                     onPointerDown={beginPan}
                     onPointerMove={movePan}
                     onPointerUp={endPan}
-                  />
+                  >
+                    <img alt="" className="preview-image" draggable="false" src={image.previewDataURL} />
+                  </div>
                   <div className="radius-outline" aria-hidden="true" />
                   <div className={`preview-tools ${canPan ? "" : "disabled"}`}>
                     <div className="move-pill">
@@ -344,20 +373,20 @@ function App() {
               <span>Circle</span>
             </div>
             <label className="range-row">
-              <span>Zoom crop</span>
+              <span>Zoom</span>
               <strong>{zoomPercent}%</strong>
             </label>
             <input
               className="radius-slider"
               max="300"
-              min="100"
-              step="1"
+              min={minimumZoomPercent}
+              step="0.1"
               type="range"
-              value={zoomPercent}
+              value={zoom * 100}
               onChange={(event) => setZoom(Number(event.target.value) / 100)}
             />
             <div className="shape-endpoints" aria-hidden="true">
-              <span>Full</span>
+              <span>Fit</span>
               <span>Tight</span>
             </div>
           </section>

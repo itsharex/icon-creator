@@ -153,11 +153,12 @@ func RoundedIcon(src image.Image, size int, radius int, zoom float64, panX float
 }
 
 func RoundedIconWithOptions(src image.Image, size int, radius int, zoom float64, panX float64, panY float64, transparentBg bool) *image.NRGBA {
-	cropped := centerSquare(src, normalizeZoom(zoom), normalizePan(panX), normalizePan(panY))
-	resized := resizeImage(cropped, size, size)
 	if transparentBg {
-		applySolidEdgeTransparency(resized)
+		transparentSource := toNRGBA(src)
+		applySolidEdgeTransparency(transparentSource)
+		src = transparentSource
 	}
+	resized := renderSquare(src, size, zoom, panX, panY)
 	applyRoundedMask(resized, radius)
 	return resized
 }
@@ -266,28 +267,75 @@ func workingDirectory(outputPath string, keep bool) (string, func(), error) {
 	}, nil
 }
 
-func centerSquare(src image.Image, zoom float64, panX float64, panY float64) image.Image {
+func MinimumZoom(width, height int) float64 {
+	if width <= 0 || height <= 0 {
+		return DefaultZoom
+	}
+	shortSide := minInt(width, height)
+	longSide := maxInt(width, height)
+	return float64(shortSide) / float64(longSide)
+}
+
+func renderSquare(src image.Image, size int, zoom float64, panX float64, panY float64) *image.NRGBA {
 	b := src.Bounds()
 	w := b.Dx()
 	h := b.Dy()
-	side := w
-	if h < side {
-		side = h
+	dst := image.NewNRGBA(image.Rect(0, 0, size, size))
+	if w <= 0 || h <= 0 || size <= 0 {
+		return dst
 	}
-	cropSide := int(math.Round(float64(side) / zoom))
-	cropSide = clampInt(cropSide, 1, side)
 
-	maxShift := float64(side-cropSide) / 2
-	xShift := int(math.Round(-(panX / 100) * maxShift))
-	yShift := int(math.Round(-(panY / 100) * maxShift))
-	x0 := b.Min.X + (w-cropSide)/2 + xShift
-	y0 := b.Min.Y + (h-cropSide)/2 + yShift
-	x0 = clampInt(x0, b.Min.X, b.Max.X-cropSide)
-	y0 = clampInt(y0, b.Min.Y, b.Max.Y-cropSide)
-	return cropImage(src, image.Rect(x0, y0, x0+cropSide, y0+cropSide))
+	zoom = normalizeZoomForSource(zoom, w, h)
+	panX = normalizePan(panX)
+	panY = normalizePan(panY)
+	scale := float64(size) * zoom / float64(minInt(w, h))
+	scaledW := float64(w) * scale
+	scaledH := float64(h) * scale
+	overflowX := math.Max(scaledW-float64(size), 0) / 2
+	overflowY := math.Max(scaledH-float64(size), 0) / 2
+	offsetX := (float64(size)-scaledW)/2 + (panX/100)*overflowX
+	offsetY := (float64(size)-scaledH)/2 + (panY/100)*overflowY
+
+	contentRect := image.Rect(
+		clampInt(int(math.Floor(offsetX)), 0, size),
+		clampInt(int(math.Floor(offsetY)), 0, size),
+		clampInt(int(math.Ceil(offsetX+scaledW)), 0, size),
+		clampInt(int(math.Ceil(offsetY+scaledH)), 0, size),
+	)
+	for y := contentRect.Min.Y; y < contentRect.Max.Y; y++ {
+		sy := (float64(y)+0.5-offsetY)/scale - 0.5 + float64(b.Min.Y)
+		for x := contentRect.Min.X; x < contentRect.Max.X; x++ {
+			sx := (float64(x)+0.5-offsetX)/scale - 0.5 + float64(b.Min.X)
+			dst.SetNRGBA(x, y, sampleNRGBA(src, sx, sy))
+		}
+	}
+	return dst
+}
+
+func sampleNRGBA(src image.Image, x, y float64) color.NRGBA {
+	b := src.Bounds()
+	x = math.Max(float64(b.Min.X), math.Min(x, float64(b.Max.X-1)))
+	y = math.Max(float64(b.Min.Y), math.Min(y, float64(b.Max.Y-1)))
+	x0 := int(math.Floor(x))
+	y0 := int(math.Floor(y))
+	x1 := clampInt(x0+1, b.Min.X, b.Max.X-1)
+	y1 := clampInt(y0+1, b.Min.Y, b.Max.Y-1)
+	fx := x - float64(x0)
+	fy := y - float64(y0)
+	c00 := color.NRGBAModel.Convert(src.At(x0, y0)).(color.NRGBA)
+	c10 := color.NRGBAModel.Convert(src.At(x1, y0)).(color.NRGBA)
+	c01 := color.NRGBAModel.Convert(src.At(x0, y1)).(color.NRGBA)
+	c11 := color.NRGBAModel.Convert(src.At(x1, y1)).(color.NRGBA)
+	return color.NRGBA{
+		R: bilinear(c00.R, c10.R, c01.R, c11.R, fx, fy),
+		G: bilinear(c00.G, c10.G, c01.G, c11.G, fx, fy),
+		B: bilinear(c00.B, c10.B, c01.B, c11.B, fx, fy),
+		A: bilinear(c00.A, c10.A, c01.A, c11.A, fx, fy),
+	}
 }
 
 func cropImage(src image.Image, rect image.Rectangle) *image.NRGBA {
+	rect = rect.Intersect(src.Bounds())
 	dst := image.NewNRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
 	for y := 0; y < rect.Dy(); y++ {
 		for x := 0; x < rect.Dx(); x++ {
@@ -711,11 +759,16 @@ func normalizeZoom(zoom float64) float64 {
 	if zoom <= 0 {
 		return DefaultZoom
 	}
-	if zoom < DefaultZoom {
-		return DefaultZoom
-	}
 	if zoom > MaxZoom {
 		return MaxZoom
+	}
+	return zoom
+}
+
+func normalizeZoomForSource(zoom float64, width, height int) float64 {
+	zoom = normalizeZoom(zoom)
+	if minimum := MinimumZoom(width, height); zoom < minimum {
+		return minimum
 	}
 	return zoom
 }

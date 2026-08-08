@@ -2,6 +2,13 @@
 
 All notable changes to Icon Creator are documented here.
 
+## v1.3.9 - 2026-08-08
+
+- Added aspect-ratio-aware zoom-out for non-square source images.
+- Added an exact-fit zoom floor with transparent letterboxing so the entire source can remain visible.
+- Fixed the live preview to match exported crop, scale, and pan behavior for wide and tall images.
+- Enabled panning on any overflowing axis, including wide images at 100% zoom.
+
 ## v1.3.8 - 2026-08-08
 
 - Added an in-app **About** dialog with the author, version, Photon Security website, and donation link.

@@ -162,34 +162,45 @@ button {
     linear-gradient(45deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%),
     linear-gradient(-45deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.06) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.06) 75%),
-    var(--preview-image);
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.06) 75%);
   background-repeat:
     repeat,
     repeat,
     repeat,
-    repeat,
-    no-repeat;
+    repeat;
   background-size:
     16px 16px,
     16px 16px,
     16px 16px,
-    16px 16px,
-    var(--preview-bg-size) var(--preview-bg-size);
+    16px 16px;
   background-position:
     0 0,
     0 8px,
     8px -8px,
-    -8px 0,
-    var(--preview-position-x) var(--preview-position-y);
+    -8px 0;
   cursor: default;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   transition:
-    background-position 120ms ease,
-    background-size 120ms ease,
     border-radius 120ms ease;
+}
+
+.preview-image {
+  position: absolute;
+  left: var(--preview-image-left);
+  top: var(--preview-image-top);
+  width: var(--preview-image-width);
+  height: var(--preview-image-height);
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    left 120ms ease,
+    top 120ms ease,
+    width 120ms ease,
+    height 120ms ease;
 }
 
 .icon-preview.can-pan {
@@ -199,6 +210,10 @@ button {
 .icon-preview.is-panning {
   cursor: grabbing;
   transition: border-radius 120ms ease;
+}
+
+.icon-preview.is-panning .preview-image {
+  transition: none;
 }
 
 .radius-outline {

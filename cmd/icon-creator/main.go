@@ -20,7 +20,7 @@ func main() {
 	flag.StringVar(&cfg.OutputPath, "output", "", "final .icns or .ico output path; the matching sibling file is also created")
 	flag.StringVar(&cfg.OutputDir, "output-dir", "", "output directory, used with -name")
 	flag.IntVar(&cfg.Radius, "radius", iconcreator.DefaultRadius, "corner radius in pixels, from 0 to 512")
-	flag.Float64Var(&cfg.Zoom, "zoom", iconcreator.DefaultZoom, "center crop zoom, from 1.0 to 3.0")
+	flag.Float64Var(&cfg.Zoom, "zoom", iconcreator.DefaultZoom, "image zoom, from the source's exact-fit scale up to 3.0 (1.0 fills the square)")
 	flag.Float64Var(&cfg.PanX, "pan-x", 0, "horizontal crop offset, from -100 to 100")
 	flag.Float64Var(&cfg.PanY, "pan-y", 0, "vertical crop offset, from -100 to 100")
 	flag.BoolVar(&cfg.TransparentBg, "transparent-background", false, "turn a solid connected outer color into transparency")

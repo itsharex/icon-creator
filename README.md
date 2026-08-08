@@ -6,8 +6,9 @@
 
 Create polished app icons from a source image on macOS or Windows. Icon
 Creator produces matching macOS `.icns`, Windows `.ico`, and PNG files with
-live rounded-corner preview, zoom crop, drag-to-recenter positioning, optional
-solid-background transparency, and automatic cleanup of temporary working files.
+live rounded-corner preview, zoom and exact-fit scaling, drag-to-recenter
+positioning, optional solid-background transparency, and automatic cleanup of
+temporary working files.
 
 Developed by Florian Bidabe / Photon Security ([www.photonsec.com.au](https://www.photonsec.com.au))
 
@@ -37,8 +38,8 @@ xattr -dr com.apple.quarantine "/Applications/Icon Creator.app"
 ## Use
 
 Drop an image onto the preview area or click **Browse**. Use **Shape feel** to
-control the rounded corners, **Zoom crop** to crop tighter, and drag the preview
-to center the source image. Click **Create icons** to export matching `.icns`
+control the rounded corners, **Zoom** to fit the full source or crop tighter,
+and drag the preview to center the source image. Click **Create icons** to export matching `.icns`
 `.ico`, and `.png` files beside the selected base output path.
 
 Enable **Transparent outer color** when the source image has a solid white,
@@ -49,6 +50,10 @@ corner mask.
 The normal app flow leaves only the finished `.icns`, `.ico`, and `.png` files.
 Temporary `icon.png` and `.iconset` files are generated in a temp directory and
 removed automatically unless **Keep working files** is enabled.
+
+For a non-square source, the Zoom control can move below 100% down to the exact
+fit needed to show the complete image. Any exposed square canvas remains
+transparent, while 100% retains the familiar center-filled crop.
 
 When reopening an existing `.ico` or `.icns`, Icon Creator selects its largest
 supported frame and defaults the export name to `<name>-edited`, protecting the
@@ -61,7 +66,7 @@ supported; legacy JPEG2000-only ICNS files are reported as unsupported.
 - Drag-and-drop source image selection
 - PNG, JPEG, GIF, WebP, SVG, ICO, and ICNS input support
 - Live rounded-corner overlay preview
-- Zoom crop and drag-to-recenter controls
+- Exact-fit zoom-out, tighter crop, and drag-to-recenter controls
 - Automatic `.icns`, `.ico`, and PNG export
 - Optional connected solid-background removal to alpha
 - Cleanup by default, with optional working-file retention
@@ -89,8 +94,8 @@ Build the app for the current platform:
 The packaged DMG is written to:
 
 ```text
-dist/Icon-Creator-1.3.8-macOS-arm64.dmg
-dist/Icon-Creator-1.3.8-Windows-amd64.exe
+dist/Icon-Creator-1.3.9-macOS-arm64.dmg
+dist/Icon-Creator-1.3.9-Windows-amd64.exe
 ```
 
 ## CLI Usage
@@ -106,6 +111,9 @@ Use `-transparent-background` to turn a solid connected outer color into alpha.
 
 `-pan-x` and `-pan-y` accept values from `-100` to `100` and are useful after
 zooming in to recenter the source image.
+
+`-zoom 1.0` fills the square. Non-square sources also accept smaller positive
+values down to their exact-fit ratio; lower values are clamped to exact fit.
 
 ## Support
 

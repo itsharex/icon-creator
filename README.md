@@ -4,7 +4,7 @@
   <img src="build/appicon.png" alt="Icon Creator app icon" width="220" />
 </p>
 
-Create polished app icons from a source image without leaving your Mac. Icon
+Create polished app icons from a source image on macOS or Windows. Icon
 Creator produces matching macOS `.icns`, Windows `.ico`, and PNG files with
 live rounded-corner preview, zoom crop, drag-to-recenter positioning, optional
 solid-background transparency, and automatic cleanup of temporary working files.
@@ -18,8 +18,8 @@ Developed by Florian Bidabe / Photon Security ([www.photonsec.com.au](https://ww
 
 ## Install
 
-1. Download the latest DMG from the [Releases page](https://github.com/Photon-Security/icon-creator/releases/latest).
-2. Open the DMG and drag **Icon Creator.app** into your `/Applications` folder.
+1. Download the macOS DMG or Windows executable from the [Releases page](https://github.com/Photon-Security/icon-creator/releases/latest).
+2. On macOS, open the DMG and drag **Icon Creator.app** into `/Applications`. On Windows, run the downloaded executable.
 3. Launch the app and drop in a PNG, JPG, JPEG, GIF, WebP, or SVG source image.
 
 ### First launch: allow the app
@@ -52,7 +52,7 @@ removed automatically unless **Keep working files** is enabled.
 
 ## Features
 
-- Native macOS desktop app built with Go, Wails, and React
+- Native macOS and Windows desktop apps built with Go, Wails, and React
 - Drag-and-drop source image selection
 - PNG, JPEG, GIF, WebP, and SVG input support
 - Live rounded-corner overlay preview
@@ -66,21 +66,26 @@ removed automatically unless **Keep working files** is enabled.
 
 Requirements:
 
-- macOS with `iconutil` and `sips`
+- macOS or Windows
 - Go 1.22 or newer
 - Node.js and npm
 - Wails v2 installed at `$HOME/go/bin/wails`, or set `WAILS_BIN`
 
-Build the macOS app and DMG:
+Build the app for the current platform:
 
 ```bash
 ./scripts/build_macos.sh
 ```
 
+```powershell
+.\scripts\build_windows.ps1
+```
+
 The packaged DMG is written to:
 
 ```text
-dist/Icon-Creator-1.3.6-macOS-arm64.dmg
+dist/Icon-Creator-1.3.7-macOS-arm64.dmg
+dist/Icon-Creator-1.3.7-Windows-amd64.exe
 ```
 
 ## CLI Usage

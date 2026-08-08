@@ -2,6 +2,12 @@
 
 All notable changes to Icon Creator are documented here.
 
+## v1.3.7 - 2026-08-08
+
+- Added a compiled Windows application to releases alongside the macOS app.
+- Replaced the macOS-only ICNS conversion step with a portable pure-Go writer.
+- Fixed **Reveal** so generated files open correctly in Windows Explorer.
+
 ## v1.3.6 - 2026-08-06
 
 - Added WebP and SVG source image support to the desktop app and CLI.

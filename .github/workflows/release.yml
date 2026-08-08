@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build embedded frontend
+        working-directory: frontend
+        run: npm ci && npm run build
+      - run: go test ./...
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+      - name: Build Windows application
+        shell: pwsh
+        run: .\scripts\build_windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-amd64
+          path: dist/Icon-Creator-*-Windows-amd64.exe
+          if-no-files-found: error
+
+  build-macos:
+    needs: test
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+      - name: Build macOS application
+        run: ./scripts/build_macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64
+          path: dist/Icon-Creator-*-macOS-arm64.dmg
+          if-no-files-found: error
+
+  publish:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          notes="$(awk -v heading="## v${version} " '
+            index($0, heading) == 1 { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md)"
+          gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --title "Icon Creator $GITHUB_REF_NAME" \
+            --notes "$notes" \
+            --verify-tag
